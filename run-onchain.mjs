@@ -3,6 +3,7 @@
 //
 //   node run-onchain.mjs <signer.testnet> [input-json]
 //   GITHUB=https://github.com/owner/repo@<commit> node run-onchain.mjs <signer.testnet> [input-json]
+//   WASM_URL=https://…/outlayer-probe.wasm node run-onchain.mjs <signer.testnet> [input-json]
 //
 // The signer's key is read from ~/.near-credentials/testnet/.
 
@@ -29,6 +30,10 @@ let source;
 if (process.env.GITHUB) {
   const [repo, commit] = process.env.GITHUB.split("@");
   source = { GitHub: { repo, commit, build_target: "wasm32-wasip2" } };
+} else if (process.env.WASM_URL) {
+  // Any HTTPS URL; OutLayer checks the download against the local build's sha256.
+  const hash = createHash("sha256").update(readFileSync("target/wasm32-wasip2/release/outlayer-probe.wasm")).digest("hex");
+  source = { WasmUrl: { url: process.env.WASM_URL, hash, build_target: "wasm32-wasip2" } };
 } else {
   source = await uploadToFastfs();
 }
